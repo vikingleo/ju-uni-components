@@ -71,5 +71,21 @@
     },
     "mp-toutiao" : {
         "usingComponents" : true
+    },
+    "h5" : {
+        "title" : "云服宝",
+        "template" : "/Users/liaoweijun/Works/svn/yfb/client-cloud-uni/tpl_index.html",
+        "devServer" : {
+            "https" : false
+        },
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : true
+            }
+        },
+        "router" : {
+            "mode" : "history"
+        },
+        "domain" : "wx.dev.yfb.yunshuiccc.com"
     }
 }

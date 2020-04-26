@@ -50,68 +50,68 @@ rowCount: 每行个数
             //菜单的id，用于设定子项的宽高，建议必填
             elementId: {
                 type: String,
-                default: 'navigatorMenu',
+                default: 'navigatorMenu'
             },
             // 列表，必填
             list: {
                 type: Array,
-                default: [],
+                default: []
             },
             //是否显示菜单名称，可选
             showName: {
                 type: Boolean,
-                default: true,
+                default: true
             },
             //名称key
             nameFieldName: {
                 type: String,
-                default: 'title',
+                default: 'title'
             },
             // 基础iconfont样式名，如果存在，使用文字图标
             baseIconFont: {
                 type: String,
-                default: '',
+                default: ''
             },
             //图标的key
             iconFieldName: {
                 type: String,
-                default: 'icon',
+                default: 'icon'
             },
             // 跳转链接的key，可选
             urlFieldName: {
                 type: String,
-                default: 'url',
+                default: 'url'
             },
             // 文本、图标颜色（如果图标是字体图标）
             color: {
                 type: String,
-                default: '#666',
+                default: '#666'
             },
             // 行数
             rowCount: {
                 type: Number | String,
-                default: 2,
+                default: 2
             },
             // 列数
             colCount: {
                 type: Number | String,
-                default: 4,
+                default: 4
             },
             // 图标宽高
             size: {
                 type: String,
-                default: '60rpx',
+                default: '60rpx'
             },
             // 点击反馈
             clickFeedback: {
                 type: Boolean,
-                default: true,
+                default: true
             },
             //当出现横向滚动时，是否显示指示条
             showScrollBar: {
                 type: Boolean,
-                default: true,
-            },
+                default: true
+            }
         },
         data() {
             return {
@@ -121,6 +121,7 @@ rowCount: 每行个数
                 show: false,
                 containerHeight: '',
                 isScroll: false,
+                rpxToPxFactor: 0
             }
         },
         computed: {
@@ -129,14 +130,32 @@ rowCount: 每行个数
             },
             wrapHeight: function () {
                 return this.fix ? 'auto' : (this.containerHeight || 0)
-            },
+            }
         },
         mounted() {
+            this.getSystemInfo()
+
             setTimeout(() => {
                 this.init()
             }, 10)
         },
         methods: {
+            /**
+             * 将全局的像素比例设置，调整到组件内部
+             * */
+            getSystemInfo() {
+                const that = this
+                uni.getSystemInfo({
+                    success: function (e) {
+                        console.log(e)
+                        // 根据安全屏幕宽度，设置rpx和px的比例，比例尺参考微信小程序 1rpx=n px
+                        that.rpxToPxFactor = e.safeArea.width < 375 ? 0.42 : (e.safeArea.width > 375 ? .552 : .5)
+                    }
+                })
+            },
+            /*
+            * 初始化
+            * */
             init() {
                 const that = this
                 if (!that.list || !that.list.length) return
@@ -147,7 +166,6 @@ rowCount: 每行个数
                 node = query.select('#' + that.elementId).boundingClientRect()
                 node.exec(result => {
                     let [ container, wrap ] = result
-                    console.log(container, wrap)
                     // 取余，如果list长度大于行x列，且有余数，滚动的宽度为单行数量+1，否则，就等于单行数量
                     let more_col = that.list.length > (that.rowCount * that.colCount) && that.list.length % (that.rowCount * that.colCount) === 0
                     //单个宽度
@@ -157,13 +175,10 @@ rowCount: 每行个数
                     let wrapWidth = `${more_col ? itemWidth * (that.colCount + 1) : wrap.width}px`
                     that.wrapWidth = wrapWidth
                     // 单个高度
-                    let itemHeight = numeral(that.size.substr(0, that.size.indexOf('rpx'))).multiply(that.$rpxToPxFactor).add(40).value()
-                    console.log(itemHeight)
+                    let itemHeight = numeral(that.size.substr(0, that.size.indexOf('rpx'))).multiply(that.rpxToPxFactor).add(40).value()
                     // 单个高度外框
                     let containerHeight = `${numeral(container.height || itemHeight).multiply(that.rowCount).value()}px`
-                    console.log(containerHeight)
                     let isScroll = that.list.length > (that.rowCount * that.colCount)
-                    console.log(isScroll)
                     that.containerHeight = containerHeight
                     that.isScroll = isScroll
                     that.show = true
@@ -207,30 +222,30 @@ rowCount: 每行个数
                     url = url.substr(0, 1) === '/' ? url : '/' + url
                     if (!opentype) {
                         wx.navigateTo({
-                            url,
+                            url
                         })
                     } else {
                         switch (opentype) {
                             case 'navigate':
                                 wx.navigateTo({
-                                    url,
+                                    url
                                 })
                                 break
                             case 'redirect':
                                 wx.redirectTo({
-                                    url,
+                                    url
                                 })
                                 break
                             case 'switchTab':
                                 wx.switchTab({
-                                    url,
+                                    url
                                 })
                                 break
                         }
                     }
                 }
-            },
-        },
+            }
+        }
     }
 </script>
 <style lang="scss" scoped>

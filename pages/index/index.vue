@@ -5,7 +5,7 @@
 </template>
 
 <script>
-	import juNavigatorGrid from '@/components/components/ju-navigator-grid/ju-navigator-grid.vue'
+	import juNavigatorGrid from '@/components/ju-navigator-grid/components/ju-navigator-grid/ju-navigator-grid.vue'
 	export default {
 		components:{
 			juNavigatorGrid

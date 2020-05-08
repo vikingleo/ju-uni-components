@@ -1,0 +1,12 @@
+
+@function units($val) {
+	@return $val * 2rpx;
+}
+$primary:rgb(0, 140, 255);
+$input-size-default: units(40);
+$default: #778a98;
+$input-size-sm: units(30);
+$border-color: #eee;
+$grey100: #f1f4f7;
+$border-radius: units(4);
+$danger:#ff6155;

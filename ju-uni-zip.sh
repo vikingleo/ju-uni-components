@@ -1,0 +1,2 @@
+#!/bin/zsh
+zip -r ju-uni-components.zip . --exclude "unpackage/*" --exclude "api.js" --exclude "package-lock.json" --exclude "ju-uni-zip.sh" --exclude "node_modules/*" --exclude ".*" --exclude "./**/*.zip"

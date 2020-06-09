@@ -1,7 +1,7 @@
 {
 	"pages": [ 
 	    {
-            "path" : "pages/upload-image/upload-image",
+            "path" : "pages/upload-image/index",
             "style" : {}
         },
 		{

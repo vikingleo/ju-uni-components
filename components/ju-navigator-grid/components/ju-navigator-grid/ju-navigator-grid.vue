@@ -1,28 +1,28 @@
 <template>
-    <view id="navigatorMenu" class="navigator-menu" v-if="list&&list.length">
+    <view id="navigatorMenu" class="navigator-menu" :class="className" v-if="list&&list.length">
         <scroll-view scroll-x class="scroll-view" :style="{width: wrapWidth}" @scroll="scrolling" scroll-with-animation>
             <view class="scroll-container" :class="{'is-fix':!fix}" :style="{height: wrapHeight}">
                 <!--导航-->
                 <view class="menu-container " :id="'navigatorMenu-item-'+index" v-for="(item,index) in list" :key="index" :style="{width:itemWidth}">
                     <template v-if="show">
-                        <button class="menu-item" :open-type="item[openTypeFieldName]" @click="onClick" :class="{'click-feedback':clickFeedback}" :data-item="stringifyItem(item)" :style="{height:itemHeight}">
+                        <button class="menu-item" :open-type="item[openTypeFieldName]||''" @click="onClick" :class="clickFeedback?'click-feedback':''+ ' ' +itemClassName" :data-item="stringifyItem(item)" :style="{height:itemHeight}">
                             <!--图标-->
                             <view>
                                 <view class="menu-icon" :class="{'menu-icon-placeholder':!item[iconFieldName]}" :style="{height: iconSize,width: iconSize}">
                                     <template v-if="!item.iconfont">
                                         <view class="menu-icon-container">
                                             <view class="menu-icon-body">
-                                                <image lazy-load mode="aspectFit" :src="item[iconFieldName]" v-if="item[iconFieldName]"></image>
+                                                <image lazy-load mode="aspectFit" :src="item[iconFieldName]" v-if="item[iconFieldName]" :class="item[iconFieldName]||iconClassName"></image>
                                             </view>
                                         </view>
                                     </template>
                                     <template v-else>
-                                        <i :class="item[iconFieldName]" v-if="item[iconFieldName]" :style="{'font-size':iconSize,color:item.iconColor||iconColor}"></i>
+                                        <i :class="item[iconFieldName]||iconClassName" v-if="item[iconFieldName]" :style="{'font-size':iconSize,color:item.iconColor||iconColor}"></i>
                                     </template>
                                 </view>
                             </view>
                             <!--文本-->
-                            <view class="menu-title" v-if="item[nameFieldName]&&!$slots.title" :style="{color:item.titleColor||textColor}" v-html="item[nameFieldName]"></view>
+                            <view class="menu-title" :class="titleClassName" v-if="item[nameFieldName]&&!$slots.title" :style="{color:item.titleColor||textColor}" v-html="item[nameFieldName]"></view>
                         </button>
                     </template>
                 </view>
@@ -38,7 +38,14 @@
 </template>
 <script>
     import numeral from 'numeral'
-
+    /*
+    * 修复记录：
+    * 添加：className，额外的class
+    * 添加：itemClassName，每一项额外的class
+    * 添加：iconClassName，每一项icon额外的class
+    * 添加：titleClassName，每一项title额外的class
+    * 修改：height属性传入的，如果带单位，直接用单位，如果不带，视为rpx
+    * */
     export default {
         props: {
             // 列表，必填
@@ -46,6 +53,26 @@
                 type: Array,
                 required: true,
                 default: []
+            },
+            // 额外class
+            className: {
+                type: String,
+                value: ''
+            },
+            // 单项额外class
+            itemClassName: {
+                type: String,
+                value: ''
+            },
+            // 标题额外class
+            titleClassName: {
+                type: String,
+                value: ''
+            },
+            // 图标额外class
+            iconClassName: {
+                type: String,
+                value: ''
             },
             //名称key
             nameFieldName: {
@@ -107,8 +134,6 @@
                 type: Boolean,
                 default: true
             },
-            //项目内，承载一个webview用于外部链接展示的页面路径，如果菜单项是跳转外部链接，h5直接location.href，app和小程序跳转webview
-            webview: String
         },
         data() {
             return {
@@ -177,12 +202,11 @@
                     //外部宽度
                     let wrapWidth = `${more_col ? itemWidth * (that.colCount + 1) : wrap.width}px`
                     that.wrapWidth = wrapWidth
-                    let has_set_height = that.height ? numeral(that.height.replace(/(rpx|px|em|pt)/g, '')).multiply(that.rpxToPxFactor).value() : 0
+                    let has_set_height = that.height ? +that.height.replace(/(rpx|px|em|pt)/g, '') : 0
                     // 单个高度
-                    let itemHeight = has_set_height || numeral(that.size.substr(0, that.size.indexOf('rpx'))).multiply(that.rpxToPxFactor).add(40).value()
-                    that.itemHeight = itemHeight + 'px'
+                    that.itemHeight = that.height ? (that.height.match(/(rpx|px|em|pt)/g) ? that.height : that.height + 'rpx') : 'auto'
                     // 单个高度外框
-                    let containerHeight = `${numeral(container.height || itemHeight).multiply(that.rowCount).value()}px`
+                    let containerHeight = `${numeral(container.height || +that.height.replace(/(rpx|px|em|pt)/g, '')).multiply(that.rowCount).value()}px`
                     let isScroll = that.list.length > (that.rowCount * that.colCount)
                     that.containerHeight = containerHeight
                     that.isScroll = isScroll
@@ -222,6 +246,7 @@
                 }
                 let item = JSON.parse(e.currentTarget.dataset.item)
                 let url = item[ that.urlFieldName ]
+
                 let opentype = item.openType
 
                 let navigate_ot = [ 'navigateTo', 'redirectTo', 'reLaunch', 'switchTab', 'navigateBack' ]
@@ -229,6 +254,7 @@
                 //根据open-type判断点击的这项是链接还是按钮，如果是按钮，且符合open-type列表，则不提供点击事件
                 //如果是普通url链接
                 let is_navigate = (!opentype && url) || (navigate_ot.indexOf(opentype) > -1 && url)
+                console.log(is_navigate)
                 //如果是带open-type
                 let is_button_open = opentype && button_ot.indexOf(opentype) > -1
                 //如果是普通按钮
@@ -243,20 +269,21 @@
                 if (is_navigate) {
                     //如果存在http，则为外链
                     let url_type = url.substr(0, 4) === 'http' ? 'webview' : 'app'
-
+                    console.log(url_type)
                     if (url_type === 'webview') {
                         // #ifdef H5
                         window.location.href = url
                         //#endif
                         //#ifndef H5
-                        if (!this.webview) {
+                        console.log(item.webview)
+                        if (!item.webview) {
                             uni.showModal({
                                 title: '提示',
                                 content: '当前url是一个外部链接，需要定义一个承载webview的页面，目前并没有提供。'
                             })
                         } else {
                             uni[ opentype || 'navigateTo' ]({
-                                url: ` ${this.webview}?url=${url}`
+                                url: `${item.webview}?url=${encodeURIComponent(JSON.stringify(url))}`
                             })
                         }
                         //    #endif
@@ -309,7 +336,6 @@
 
             &.click-feedback {
                 &:active {
-                    background-color: #f1f4f7 !important;
                     opacity: .7;
                 }
             }

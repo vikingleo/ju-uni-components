@@ -1,7 +1,7 @@
 <template>
     <view class="p-15">
         <!-- 上传图片 -->
-        <image-upload :src="src" count="2" text="点击就上传" @select="onTest" border="dashed" @cancel-select="onTest" @choose="onTest" @remove="onTest" @preview="onTest" @control="onTest" @cancel-control="onTest"></image-upload>
+        <image-upload :src="src" count="2" text="点击就上传" @select="onTest" border="dashed" @cancel-select="onTest" @choose="onTest" @remove="onTest" @preview="onTest" @control="onTest" @cancel-control="onTest" upload="after"></image-upload>
     </view>
 </template>
 

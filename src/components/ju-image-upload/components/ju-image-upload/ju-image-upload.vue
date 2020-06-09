@@ -1,30 +1,6 @@
 <template>
 	<view class="img-upload">
-		<!-- <view class="img-upload-sheet" v-if="sheetActive" :class="{'ready-hide':readyHideSheet}">
-			<view class="img-upload-sheet-mask" @click="hideSheet"></view>
-			<view class="img-upload-sheet-control">
-				<view class="item">
-					<button class="control-btn-item control-btn-item-preview" @click="onPreview">
-						<view class="control-btn-item-icon"><i class="vis-icon icon-eye"></i></view>
-						<view class="control-btn-item-text">预览</view>
-					</button>
-				</view>
-				<view class="item">
-					<button class="control-btn-item control-btn-item-remove" @click="onRemove">
-						<view class="control-btn-item-icon"><i class="vis-icon icon-trash"></i></view>
-						<view class="control-btn-item-text">删除</view>
-					</button>
-				</view>
-				<view class="item" v-if="type==='select'">
-					<button class="control-btn-item control-btn-item-select" @click="onSelect">
-						<view class="control-btn-item-icon">
-							<i class="vis-icon icon-check" v-if="findInSelected()"></i>
-						</view>
-						<view class="control-btn-item-text" v-text="findInSelected()?'已选择':'选择'"></view>
-					</button>
-				</view>
-			</view>
-		</view> -->
+
 		<view class="img-upload-content" :style="{margin:count>1?gutter/2*-1+'px':0}">
 			<view class="img-upload-container img-preview-item" :key="index" v-for="(item,index) in instanceUrls" :style="{ width:instanceWidth, height:instanceHeight,padding:gutter/2+'px'}">
 				<view class="img-upload-body" :style="{backgroundColor}" :class="{square:rowCount>0}">

@@ -14,12 +14,15 @@
                 <!-- 可以通过slot设置字体图标 -->
                 <slot name="disabledLock" v-if="disabledLock==='custom'"></slot>
             </view>
-            <label class="ju-field-label" @click="onFocus" :class="labelMoreClass" :style="{minWidth:labelWidth,color:instanceErrorText?'#ff6155':(isFocus?focusBorder:'')}" v-if="label||labelIcon">
+            <label class="ju-field-label" @click="onFocus" :class="labelMoreClass" :style="{minWidth:instanceLabelWidth,color:instanceErrorText?'#ff6155':(isFocus?focusBorder:'')}" v-if="label||labelIcon">
                 <i :class="labelIcon" class="ju-field-label-icon" v-if="labelIcon" :style="{'margin-right':label?'10rpx':0}"></i>
-                <view v-if="label" class="ju-field-label-content" :class="'label-align-'+labelAlign">
-                    <view v-text="item" :key="index" v-for="(item,index) in label"></view>
+                <view v-if="label&&instanceLabelAlign==='justify'" class="ju-field-label-content" :class="'label-align-'+instanceLabelAlign">
+                    <template v-if="instanceLabelAlign==='justify'">
+                        <view v-text="item" class="label-single-text" :key="index" v-for="(item,index) in label"></view>
+                    </template>
                 </view>
-                <view class="colon" v-if="colon">:</view>
+                <text v-else v-text="label"></text>
+                <text class="colon" v-if="instanceColon">:</text>
             </label>
             <slot name="inputBefore"></slot>
             <view class="ju-field-content" :class="contentClass">
@@ -38,6 +41,7 @@
                             :name="name"
                             :maxlength="maxlength"
                             :value="value"
+                            :required="required"
                             @focus="onFocus"
                             @blur="onBlur"
                             @input="onInput"
@@ -72,32 +76,55 @@
     export default {
         name: "ju-field",
         extends: Parent,
+        behaviors: [ 'uni://form-field' ],
+        inject: {
+            fieldGroup: {
+                default: {}
+            }
+        },
         props: {
             //模式，可选：底部线条：default或不设置，cude：带边框
             mode: {type: String, default: "default"},
             id: {type: String, default: ""},
             //mode=cube时有效
             backgroundColor: {type: String, default: ""},
+            //固定高度
             height: {
                 type: String,
                 default: '98rpx'
             },
+            // 字段标题的图标
             labelIcon: {type: String, default: ""},
+            // label对齐方式
             labelAlign: {type: String, default: "left"},
-            labelWidth: {type: String, default: "100rpx"},
+            // label宽度
+            labelWidth: {type: String, default: null},
+            // label的样式，建议写在全局样式，比如App.vue
             labelClass: {type: String, default: ""},
+            // input外层容器的额外class，建议写在全局
             contentClass: String,
+            // 输入框的额外class，建议写在全局
             inputClass: String,
+            //组件的最外层class，建议写在全局
             className: {type: String, default: ""},
+            // 字段的占位文本
             placeholder: {type: String, default: ""},
-            value: {type: String, default: "", required: true},
+            // 字段默认值
+            value: {type: String, default: ""},
+            // 字段类型，目前支持input的所有类型
             type: {type: String, default: "text"},
+            // 字段的name
             name: {type: String, default: ""},
+            // 字段值最大长度
             maxlength: {type: Number | String, default: 140},
+            // 底部border颜色，设置无时需要设置为transparent或rgba(0,0,0,0)，mode=cude时默认无
             border: {type: String | Boolean, default: "#eee"},
+            // 获取焦点时底部border颜色，默认主色调
             focusBorder: {type: String | Boolean, default: ""},
+            // label文本显示
             label: String,
-            required: Boolean,
+            //是否比天，如果必填，则出现红色星号，默认星号在前
+            required: {type: Boolean | String, default: false},
             errorText: String,
             disabled: Boolean,
             disabledLock: {
@@ -131,7 +158,10 @@
                     _cla += "label-align-center"
                 }
                 if (this.required) {
-                    _cla += ` is-required`
+                    _cla += ' is-required'
+                    if (typeof this.required === 'string') {
+                        _cla += ` required-mark-${this.required}`
+                    }
                 }
                 if (this.labelBgIsColor) {
                     _cla += ` bg-${this.labelBackgroundColor.replace(
@@ -149,6 +179,18 @@
                     _style += " display:none;"
                 }
                 return _style
+            },
+            // 实例中处理过的labelWidth
+            instanceLabelWidth: function () {
+                return this.labelWidth || this.fieldGroup.labelWidth
+            },
+            // 实例中处理过的labelWidth
+            instanceLabelAlign: function () {
+                return this.labelAlign || this.fieldGroup.labelAlign
+            },
+            // 实例中处理过的labelWidth
+            instanceColon: function () {
+                return this.colon || this.fieldGroup.colon
             }
         },
         data() {
@@ -162,7 +204,7 @@
                 this.instanceErrorText = newVal
             }
         },
-        onShow() {
+        created() {
             this.instanceErrorText = this.errorText
         },
         methods: {
@@ -198,7 +240,7 @@
     @import "./_variable.scss";
 
     .colon {
-        padding-left: units(5);
+        padding:0 units(5);
     }
 
     .ju-field {
@@ -340,47 +382,34 @@
             color: $default;
             white-space: nowrap;
             height: 100%;
-            padding:0 units(10);
+            padding: 0 units(10);
             display: flex;
             line-height: 1;
             font-size: units(14);
             align-items: center;
             border-radius: $border-radius 0 0 $border-radius;
-
             &-content {
                 flex: 1;
-                display: flex;
-                align-items: center;
 
                 &.label-align {
                     &-left {
-                        justify-content: flex-start;
+
                     }
 
                     &-justify {
+                        display: flex;
+                        align-items: center;
                         justify-content: space-between;
                     }
 
                     &-right {
-                        justify-content: flex-end;
-
-                        &.is-required {
-                            &::after {
-                                right: 0;
-                                left: unset;
-                            }
-                        }
+                        display: inline-block;
+                        text-align: right;
                     }
 
                     &-center {
-                        justify-content: center;
-
-                        &.is-required {
-                            &::after {
-                                right: 0;
-                                left: unset;
-                            }
-                        }
+                        display: inline-block;
+                        text-align: center;
                     }
                 }
             }
@@ -388,12 +417,48 @@
             &.is-required {
                 position: relative;
 
-                &::after {
-                    content: "*";
-                    display: block;
-                    position: absolute;
-                    color: #f00;
-                    left: 0;
+                .ju-field-label-content {
+                    .label-single-text {
+                        &:first-child {
+                            position: relative;
+
+                            &::before {
+                                content: "*";
+                                display: block;
+                                position: absolute;
+                                color: #f00;
+                                margin-left: units(-10);
+                                top: units(-5);
+                            }
+                        }
+                    }
+                }
+
+                &.required-mark {
+                    &-right {
+                        .ju-field-label-content {
+                            .label-single-text {
+                                &:first-child {
+                                    &::before {
+                                        display: none;
+                                    }
+                                }
+
+                                &:last-child {
+                                    position: relative;
+
+                                    &::after {
+                                        content: "*";
+                                        display: block;
+                                        position: absolute;
+                                        color: #f00;
+                                        right: units(-10);
+                                        top: units(-5);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -402,9 +467,13 @@
             flex: 1;
             height: 100%;
             position: relative;
-            &-input{
+
+            &-input {
                 height: 100%;
+                padding-left: units(10);
+
             }
+
             input {
                 font-size: units(14);
                 height: 100%;

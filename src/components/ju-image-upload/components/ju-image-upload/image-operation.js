@@ -11,6 +11,15 @@ const isWechatBrowser = () => {
 }
 
 class ImageOperation {
+
+    /**
+     * 返回当前浏览器是否微信浏览器
+     * @returns {boolean}
+     */
+    isWechatBrowser() {
+        return isWechatBrowser()
+    }
+
     /**
      * 选择图片
      * @returns {Promise<unknown>}
@@ -22,7 +31,7 @@ class ImageOperation {
                 sizeType: [ 'original', 'compressed' ],
                 sourceType: [ 'album', 'camera' ]
             }
-            option = Object.assign(defaultOption, option)
+            defaultOption = Object.assign(defaultOption, option)
             let platform = uni
             // #ifdef H5
             // @TODO 此处自行引入微信js-sdk
@@ -32,9 +41,9 @@ class ImageOperation {
             platform = uni
             // #endif
             platform.chooseImage({
-                count: option.count,
-                sizeType: option.sizeType,
-                sourceType: option.sourceType,
+                count: defaultOption.count,
+                sizeType: defaultOption.sizeType,
+                sourceType: defaultOption.sourceType,
                 success: function (res) {
                     let res_data = null
                     let type = null
@@ -43,41 +52,20 @@ class ImageOperation {
                         res_data = res.localIds
                         type = 'wx'
                     } else {
-                        res_data = res.tempFilePaths
+                        res_data = {paths: res.tempFilePaths, files: res.tempFiles}
                         type = 'default'
                     }
                     // #endif
                     // #ifndef H5
-                    res_data = res.tempFilePaths
+                    res_data = {paths: res.tempFilePaths, files: res.tempFiles}
                     type = 'default'
                     // #endif
                     resolve({status: 1, msg: '选择图片成功', data: res_data, type})
                 },
                 fail(e) {
-                    reject(e.errMsg)
+                    resolve({status: 0, msg: e.errMsg})
                 }
             })
-        })
-    }
-
-    /**
-     * 上传base64图像数据
-     * @param base64
-     * @returns {Promise<unknown>}
-     */
-    base64Upload(base64) {
-        return new Promise(async (resolve, reject) => {
-
-            if (!base64) {
-                reject('have not base64 image data')
-                return
-            }
-            try {
-                let res = await vue.$http(vue.$api.tool.upload_by_base64).post({img: base64})
-                resolve(res)
-            } catch (e) {
-                reject(e)
-            }
         })
     }
 
@@ -87,6 +75,7 @@ class ImageOperation {
      * @returns {Promise<unknown>}
      */
     uploadForUni(option = {}) {
+        const that = this
         return new Promise((resolve, reject) => {
             if (!option.filePath) {
                 reject({code: 1, msg: '没有传入"filePath"'})
@@ -98,40 +87,31 @@ class ImageOperation {
                 return
             }
             option.formData = Object.assign({access_token: uni.getStorageSync('access_token')}, option.formData)
-            console.log(option)
             uni.uploadFile({
-                url: option.url,
-                filePath: option.filePath,
-                name: option.name || 'file',
-                fileType: 'image',
-                formData: option.formData,
+                ...option,
                 success(response) {
-                    console.log(response)
-                    let res = JSON.parse(response.data)
-                    res.code = +res.code
-                    if (res.code === 1) {
+                    let res = null
+                    if (response.statusCode !== 200) {
                         uni.showModal({
-                            title: '提示',
-                            content: res.msg
-                        })
-                    } else if (res.code === -1) {
-                        uni.showModal({
-                            title: '未登录',
-                            content: res.msg,
-                            success(cn) {
-                                if (cn.confirm) {
-                                    uni.navigateTo({
-                                        url: '/pages/login'
-                                    })
-                                }
+                            title: '上传' + response.statusCode.toString(),
+                            content: '网络请求错误',
+                            fail(err) {
+                                console.error(err)
                             }
                         })
+                    } else {
+                        res = JSON.parse(response.data)
+                        res.code = +res.code
                     }
                     resolve(res)
                 },
                 fail(err) {
+                    uni.showModal({
+                        title: '请求错误',
+                        content: '网络请求错误'
+                    })
                     reject(err)
-                    throw new Error(JSON.stringify(err))
+                    console.error(err)
                 }
             })
         })
@@ -160,6 +140,7 @@ class ImageOperation {
             })
         })
     }
+
 }
 
 export default ImageOperation

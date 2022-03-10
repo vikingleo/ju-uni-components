@@ -108,3 +108,7 @@ dist
 unpackage
 
 ./api.js
+.DS_Store
+.idea
+yarn.lock
+*lock.json

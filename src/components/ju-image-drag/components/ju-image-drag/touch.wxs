@@ -1,0 +1,46 @@
+var startX = 0;
+var startY = 0;
+var moveX = 0;
+var moveY = 0;
+
+/**
+ * 触摸
+ * @param e
+ * @param ins
+ */
+function touchStart(e, ins) {
+	var touch = e.touches[0] || e.changedTouches[0]
+	startX = touch.pageX
+	startY = touch.pageY
+	var dataset = e.instance.getDataset()
+	ins.callMethod('touchStartFromWxs', {startX: startX, startY: startY, id: dataset.id})
+}
+
+/**
+ * 开始移动
+ * @param e
+ * @param ins
+ */
+function touchMove(e, ins) {
+	console.log(ins)
+	var touch = e.touches[0] || e.changedTouches[0]
+	moveX = touch.pageX - startX
+	moveY = touch.pageY - startY
+	console.log(moveX, moveY)
+	e.instance.setStyle({transform: 'translateX(' + moveX + ') translateY(' + moveY + ')'})
+}
+
+/**
+ * 松开触摸
+ * @param e
+ * @param ins
+ */
+function touchEnd(e, ins) {
+	ins.callMethod('onTouchEnd', {moveX: moveX, moveY: moveY, startX: startX, startY: startY})
+}
+
+module.exports = {
+	touchStart: touchStart,
+	touchMove: touchMove,
+	touchEnd: touchEnd
+}
